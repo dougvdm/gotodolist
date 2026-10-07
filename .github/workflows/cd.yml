@@ -13,8 +13,16 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Aguardar propagação da imagem no GHCR
-        run: sleep 30
+      - name: Verificar imagem no GHCR
+        run: |
+          for i in $(seq 1 12); do
+            if docker manifest inspect ghcr.io/${{ github.repository }}:latest > /dev/null 2>&1; then
+              echo "✅ Imagem encontrada no GHCR"
+              break
+            fi
+            echo "⏳ Aguardando imagem... tentativa $i/12"
+            sleep 10
+          done
 
       - name: Chamar webhook do Portainer
         run: |
